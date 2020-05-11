@@ -8,17 +8,26 @@ class Population(object):
 	"""
 		An object to represent a population of cells
 	"""
-
-	def __init__(self, N: int, rule_num: int = 30):
+	data_types = {
+		1: ">i1",
+		2: ">i1",
+		3: ">i1",
+		4: ">i2",
+		5: ">i4",
+		6: ">i8"
+	}
+	
+	def __init__(self, N: int, rule_num: int=30):
 		"""
 			Constructor.  
 
 			:param N: 			The population size
 			:param rule_num: 	The transform rule to apply
 		"""
-		self.rule_num = rule_num
-		self.transform_map = self.transform_from_rule_number(rule_num)
 		self.size = N
+		self.rule_num = rule_num
+		self.window_size = self.get_window_size(rule_num)
+		self.transform_map = self.transform_from_rule_number()
 		self._cells = self.empty_array(N)
 
 		# init population
@@ -51,34 +60,54 @@ class Population(object):
 		self._cells = res
 		return res
 
-	def transform_from_rule_number(self, rule_num):
+	def transform_from_rule_number(self, rule_num=None, window_size=None):
 		"""
 		Create a hashmap for the numeric rule, ie Rule of 30
 		"""
+		rule_num = rule_num or self.rule_num
+		window_size = window_size or self.window_size
 
-		assert rule_num < 256, "We can only handle rules to 256 (8 bit)"
-		
-		bit_array = np.unpackbits(np.array([[rule_num]], dtype=np.uint8))
+		# assert rule_num < 256, "We can only handle rules to 256 (8 bit)"
+		bit_array = np.unpackbits(np.array([[rule_num]], dtype=self.data_types[window_size]).view(np.uint8))
 
-		return dict(((k, v) for k, v in zip(range(7, -1, -1), bit_array)))
+		return dict(((k, v) for k, v in zip(range(2**window_size - 1, -1, -1), bit_array)))
 
-	def iter_window(self):
+	def iter_window(self, window_size=3):
 		"""
 		Returns a generator that iterates through a size-3 window of the cells to create an integer state.  
 
 		The window assumes continuous boundaries
 		"""
 
-		for idx in range(self.size):
-			lc = self.cells[idx-1]
-			cc = self.cells[idx]
-			rc = self.cells[(idx+1) % self.size]
+		N = int((window_size - 1) / 2)  # This is the window offset
 
-			yield int(''.join(map(str, (lc, cc, rc))), 2)
+		for idx in range(self.size):
+			# idx is the cell of interest, get the window of cells
+
+			cells = [self.cells[(idx + offset) % self.size ] for offset in range(-1*N, window_size-N)]
+
+			yield int(''.join(map(str, cells)), 2)
+
+	def get_window_size(self, rule_num):
+
+		l2 = np.log2(rule_num)
+
+		if l2 / 8 < 1:
+			return 3
+		elif l2 / 16 < 1:
+			return 4
+		elif l2 / 32 < 1:
+			return 5
+		elif l2 / 64 < 1:
+			return 6
+		else:
+			raise ValueError("Can't handle more than 64 bit transform vectors")
 
 if __name__ == "__main__":
 	# dirty testing
-	pop = Population(5)
+	pop = Population(5, 300)
 
-	for i in pop:
-		print(i)
+	print(pop.window_size)
+
+	#print(pop.transform_from_rule_number(30))
+	#print(pop.transform_from_rule_number(300))

@@ -10,7 +10,7 @@ class CellularAutomataUI(tk.Frame):
 	def __init__(self, root):
 		super().__init__(root)
 		self.setup_ui()
-		self.cells = Population(self.population_size.get(), self.rule_number.get())
+		self.init_cells()
 		self.reset()
 
 	def setup_ui(self):
@@ -51,10 +51,21 @@ class CellularAutomataUI(tk.Frame):
 		frm_rule_num.pack(side=tk.TOP, pady=2, fill=tk.X, expand=True)
 		self.rule_number = tk.IntVar()
 		self.rule_number.set(30)
-		self.spn_rule_num = tk.Spinbox(frm_rule_num, from_=0, to_=256, justify='center', width=5, textvariable=self.rule_number)
+		self.spn_rule_num = tk.Spinbox(frm_rule_num, from_=0, justify='center', width=5, textvariable=self.rule_number)
 		self.spn_rule_num.pack(side=tk.LEFT, pady=3, padx=3)
 		lbl_rule_num = tk.Label(frm_rule_num, text="Rule No.")
 		lbl_rule_num.pack(side=tk.LEFT, pady=3)
+
+		"""
+		frm_window_size = tk.Frame(frm_params)
+		frm_window_size.pack(side=tk.TOP, pady=2, fill=tk.X, expand=True)
+		self.window_size = tk.IntVar()
+		self.window_size.set(3)
+		self.spn_window_size = tk.Spinbox(frm_window_size, from_=1, to_=6, justify='center', width=5, textvariable=self.window_size)
+		self.spn_window_size.pack(side=tk.LEFT, pady=3, padx=3)
+		lbl_window_size = tk.Label(frm_window_size, text='Rule Window Size')
+		lbl_window_size.pack(side=tk.LEFT, pady=3)
+		"""
 
 		frm_do_scroll = tk.Frame(frm_params)
 		frm_do_scroll.pack(side=tk.TOP, pady=2, expand=True)
@@ -77,10 +88,13 @@ class CellularAutomataUI(tk.Frame):
 		btn_reset = tk.Button(frm_btns, text='Reset', command=self.reset)
 		btn_reset.pack(side=tk.LEFT, padx=3, pady=3)
 
+	def init_cells(self):
+		self.cells = Population(self.population_size.get(), self.rule_number.get())
+
 	def reset(self):
 
 		if not self.do_scroll.get():
-			self.cells = Population(self.population_size.get(), self.rule_number.get())
+			self.init_cells()
 		self.canvas.delete('all')
 		self.iter.set(1)
 		self.draw_line(self.iter.get())
