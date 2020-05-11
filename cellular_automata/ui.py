@@ -3,13 +3,14 @@ from tkinter.ttk import Style
 import numpy as np
 from cellular_automata.ca import Population
 
-CELL_SIZE = 5
+CELL_SIZE = 2
 
 class CellularAutomataUI(tk.Frame):
 
 	def __init__(self, root):
 		super().__init__(root)
 		self.setup_ui()
+		self.cells = Population(self.population_size.get(), self.rule_number.get())
 		self.reset()
 
 	def setup_ui(self):
@@ -19,7 +20,7 @@ class CellularAutomataUI(tk.Frame):
 		self.style.theme_use('default')
 		self.pack(fill=tk.BOTH, expand=True)
 
-		self.canvas = tk.Canvas(self, bg='white', relief=tk.RAISED, borderwidth=1, width=CELL_SIZE*100, height=CELL_SIZE*100)
+		self.canvas = tk.Canvas(self, bg='white', relief=tk.RAISED, borderwidth=1, width=CELL_SIZE*200, height=CELL_SIZE*200)
 		self.canvas.pack(fill=tk.BOTH, side=tk.LEFT, anchor=tk.N, expand=True)
 
 		frm_params = tk.Frame(self, width=30)
@@ -31,7 +32,7 @@ class CellularAutomataUI(tk.Frame):
 		frm_pop_size = tk.Frame(frm_params)
 		frm_pop_size.pack(side=tk.TOP, pady=2, fill=tk.X, expand=True)
 		self.population_size = tk.IntVar()
-		self.population_size.set(100)
+		self.population_size.set(200)
 		self.spn_pop_size = tk.Spinbox(frm_pop_size, from_=20, to_=2000, increment=10, justify='center', width=5, textvariable=self.population_size)
 		self.spn_pop_size.pack(side=tk.LEFT, padx=3, pady=3)
 		lbl_pop_size = tk.Label(frm_pop_size, text="Size (N)", justify='left')
@@ -40,7 +41,7 @@ class CellularAutomataUI(tk.Frame):
 		frm_disp_iter = tk.Frame(frm_params)
 		frm_disp_iter.pack(side=tk.TOP, pady=2, fill=tk.X, expand=True)
 		self.display_iteration_size = tk.IntVar()
-		self.display_iteration_size.set(100)
+		self.display_iteration_size.set(200)
 		self.spn_disp_iter = tk.Spinbox(frm_disp_iter, from_=25, to_=200, increment=5, justify='center', width=5, textvariable=self.display_iteration_size)
 		self.spn_disp_iter.pack(side=tk.LEFT, padx=3, pady=3)
 		lbl_disp_iter = tk.Label(frm_disp_iter, text="Display Iterations")
@@ -58,8 +59,9 @@ class CellularAutomataUI(tk.Frame):
 		frm_do_scroll = tk.Frame(frm_params)
 		frm_do_scroll.pack(side=tk.TOP, pady=2, expand=True)
 
-		cb_do_scroll = tk.Checkbutton(frm_do_scroll, text="Scroll")
-		cb_do_scroll.pack(side=tk.RIGHT, expand=True)
+		self.do_scroll = tk.BooleanVar()
+		self.cb_do_scroll = tk.Checkbutton(frm_do_scroll, text="Scroll", variable=self.do_scroll)
+		self.cb_do_scroll.pack(side=tk.RIGHT, expand=True)
 
 		frm_btns = tk.Frame(frm_params)
 		frm_btns.pack(side=tk.BOTTOM, pady=5, expand=True)
@@ -77,7 +79,8 @@ class CellularAutomataUI(tk.Frame):
 
 	def reset(self):
 
-		self.cells = Population(self.population_size.get(), self.rule_number.get())
+		if not self.do_scroll.get():
+			self.cells = Population(self.population_size.get(), self.rule_number.get())
 		self.canvas.delete('all')
 		self.iter.set(1)
 		self.draw_line(self.iter.get())
